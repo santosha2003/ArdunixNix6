@@ -443,14 +443,16 @@ int RTC_hours, RTC_minutes, RTC_seconds, RTC_day, RTC_month, RTC_year, RTC_day_o
 byte NumberArray[6]    = {0, 0, 0, 0, 0, 0};
 byte currNumberArray[6] = {0, 0, 0, 0, 0, 0};
 byte displayType[6]    = {FADE, FADE, FADE, FADE, FADE, FADE};
-byte fadeState[6]      = {0, 0, 0, 0, 0, 0};
+byte fadeState[6]      ;
 byte OnOff[6]    = {1, 1, 1, 1, 1, 1};    //current state of digit at this time - use for dimming - blink - fade 
 byte ourIP[4]          = {0, 0, 0, 0}; // set by the WiFi module, if attached
-
+  int digitOnTime[6];
+  int digitOffTime[6];
+  int digitSwitchTime[6]= {0, 0, 0, 0, 0, 0};
 // how many fade steps to increment (out of DIGIT_DISPLAY_COUNT) each impression
-// 100 is about 1 second
+// 100 // 50 is about 1 second
 int fadeSteps = FADE_STEPS_DEFAULT;
-int digitOffCount = DIGIT_DISPLAY_OFF;
+int digitOffCount = DIGIT_DISPLAY_OFF;  //999
 int scrollSteps = SCROLL_STEPS_DEFAULT;
 boolean scrollback = true;
 boolean fade = true;
@@ -656,7 +658,7 @@ void setup(){
    Serial.print(" ");//test what reads
      Serial.println(fadeSteps);  //test what reads
  }
-     fadeSteps=49; 
+     // fadeSteps=49; // for test    now 52 // 46 big cycles per second *1000 display timer  46000 установок регистров в секунду, а если 2 цифры сразу то 100000 (fade)  
 
 
   // initialise the internal time (in case we don't find the time provider)  первая установка времени здесь
@@ -676,7 +678,6 @@ void setup(){
  // setDS3231time(second(), minute(), hour(), dayOfWeek, day(), month(), year());  // установка часов DS3231 по времени компьютера  
  
  // setRTC();   //ok works - 1-st run
-   
 
 /*
         Clock.setMinute(24);//Set the minute 
@@ -708,6 +709,8 @@ byte year2digit=year() -2000;
  Serial.print("-doW-");
     Serial.println(dayOfWeek);
   }
+  
+
 
 /*
 // установка значений времени (попытка)   achtung
@@ -743,6 +746,10 @@ Clock.setMinute(minute());
     // Make sure the clock keeps running even on battery
     if (!Clock.oscillatorCheck())
       Clock.enableOscillator(true, true, 0);
+
+       // если зависает то смотреть монитор порта и закомментировать строку ниже  i found what may hung up 
+ if (useRTC)  getRTCTime();   
+ 
    if (debug){
      Serial.print("verify ds32321 - ");
       Serial.print(hours);
@@ -966,7 +973,7 @@ void loop(){
       //    performOncePerDayProcessing();
         }
         
-    //    performOncePerHourProcessing();
+        performOncePerHourProcessing();
       }
       
       performOncePerMinuteProcessing();
@@ -1075,7 +1082,7 @@ if (debug){
             acpOffset = 0;        //  0 - не дергаю однорукого бандита  acp off
           }
         } else {
-          acpOffset = 1;
+          acpOffset = 1;   //  0 ? 1 is anti poison on // effects at 15 +50 seconds - do anti-poison too
         }
       }
     }
@@ -1098,7 +1105,7 @@ if (debug){
   } else {
     // Digit burn mode
 
-    // Santosha - turn on digit using Shifter but useless - current set as normal light
+    // Santosha - turn on digit using Shifter // but useless - current set as normal light // dynamic mode - max bright
  OnOff[0]=0;
  OnOff[1]=0;
  OnOff[2]=0;
@@ -1749,9 +1756,9 @@ int getDimmingFromLDR() {
     if (sensorSmoothedResult < dimDark) sensorSmoothedResult = dimDark;
     if (sensorSmoothedResult > dimBright) sensorSmoothedResult = dimBright;
 
- // no ldr but useLDR true (test)
- //sensorSmoothedResult = dimDark +1;
- sensorSmoothedResult = dimBright;
+ // no ldr but useLDR true (test) =dimBright (999)  // фоторезистор - если не запаян то установить значение на полную яркость
+ sensorSmoothedResult = dimDark +1;
+ //sensorSmoothedResult = dimBright;
  
     sensorSmoothedResult = (sensorSmoothedResult - dimDark) * sensorFactor;
 
@@ -1909,32 +1916,58 @@ void performOncePerSecondProcessing() {
 // Called once per minute
 // ************************************************************
 void performOncePerMinuteProcessing() {
-  if (useWiFi > 0) {
-    if (useWiFi == MAX_WIFI_TIME) {
-      // We recently got an update, send to the RTC (if installed)
-      setRTC();      
-    }
-    useWiFi--;
-  } else {
-    // get the time from the external RTC provider - (if installed) one  time each minute 
-  if (useRTC)  getRTCTime();
-  }
-  digitalClockDisplay()  ; //print time - digits as hh:mm:ss to serial port 57600
+
+ // digitalClockDisplay()  ; //print time - digits as hh:mm:ss to serial port 57600
    if (debug)Serial.print(lastImpressionsPerSec);   // cycles per second - delay 50 show 20 cycles
    if (debug)Serial.println();
  /*      nixietrainer();      // anti cathodes poisoning  1.8sec all
 // if (debug){
   if (useRTC) testDS3231TempSensor();  //display temperature
 // }
- shifter.setAll(HIGH);   // off all tubes
-     shifter.write(); //send changes to the chain and display them
-     */
+ */
+ //shifter.setAll(HIGH);   // off all tubes
+  //   shifter.write(); //send changes to the chain and display them
+     
+         allFadeOrNormal(DO_NOT_APPLY_LEAD_0_BLANK);
+ OnOff[0]=0;
+ OnOff[1]=0;
+ OnOff[2]=0;
+ OnOff[3]=0;
+ OnOff[4]=0;
+ OnOff[5]=0;
+                 // initialise the slots values temperature //  после чтения чипа часов есть ошибка - засветка третьей одновременно цифры нуля или единички на 4 лампах кроме часовых!
+                loadNumberArrayTemp(11);
+                transition.setAlternateValues();
+                loadNumberArrayTime();
+                transition.setRegularValues();
+                allFadeOrNormal(DO_NOT_APPLY_LEAD_0_BLANK);
+int     digitSwitchTime[6]= {0, 0, 0, 0, 0, 0};       // OK fade 2 digit together Works //  заработал режим переключения с плавным гашением  was glitch 3 digits together each minute..
 }
 
 // ************************************************************
 // Called once per hour
 // ************************************************************
 void performOncePerHourProcessing() {
+
+    //  считывание ds3231 перенес на 1 раз в час .. глюк - сбивается режим fade  
+    if (useWiFi > 0) {
+    if (useWiFi == MAX_WIFI_TIME) {
+      // We recently got an update, send to the RTC (if installed)
+      setRTC();      
+    }
+    useWiFi--;
+  } else {
+    // get the time from the external RTC provider - (if installed) one  time each minute  перенес на каждый час 
+  if (useRTC)  getRTCTime();
+  }
+                // initialise the slots values temperature //  после чтения чипа часов есть ошибка - засветка третьей одновременно цифры нуля или единички на 4 лампах кроме часовых!
+                loadNumberArrayTemp(11);
+                transition.setAlternateValues();
+                loadNumberArrayTime();
+                transition.setRegularValues();
+                allFadeOrNormal(DO_NOT_APPLY_LEAD_0_BLANK);
+
+  
 }
 
 //subs
@@ -2891,7 +2924,7 @@ void loadNumberArrayIP(byte byte1, byte byte2) {
 // void SetSN74141Chip(int digit, int value, byte l0,byte l1,byte l2,byte l3,byte l4,byte l5)
 void SetSN74141Chip(int digit, int value) {
 // note that digit turns on but not save state into OnOff variable
-OnOff[digit]= 0;         // now digit turns off (on for transition)  ..   по отладке 46 раз в секунду основной цикл - не моргает. (46000 /sec digit)
+//OnOff[digit]= 0;         // now digit turns off (on for transition)  ..   по отладке 46 раз в секунду основной цикл - не моргает. (46000 /sec digit)
 // test - turn on only current digit (faster) do not change state of another registry bits
   switch (digit) {
    // case 0: PORTC = PORTC | B00001000; break; // PC3 - equivalent to digitalWrite(ledPin_a_1,HIGH);
@@ -2932,8 +2965,8 @@ OnOff[digit]= 0;         // now digit turns off (on for transition)  ..   по �
    }
 
   }
-  /*
-      if (OnOff[0] == 0 ) {          // state for this time - off digits if they turn off now
+  
+  /* useless ..    if (OnOff[0] == 0 ) {          // state for this time - off digits if they turn off now
        shifter.setPin(0, HIGH);
        shifter.setPin(1, HIGH);
        shifter.setPin(2, HIGH);
@@ -2969,7 +3002,7 @@ OnOff[digit]= 0;         // now digit turns off (on for transition)  ..   по �
        shifter.setPin(22, HIGH);
        shifter.setPin(23, HIGH);      
     }
- */
+  */
 
      shifter.write();    // set registers 74HC595 - turn on output
      
@@ -3012,13 +3045,18 @@ OnOff[digit]= 0;         // now digit turns off (on for transition)  ..   по �
 // ************************************************************
 void outputDisplay()
 {
-  int digitOnTime[6];
-  int digitOffTime[6];
-  int digitSwitchTime[6];
+
   float digitSwitchTimeFloat;
   int tmpDispType;
-shifter.setAll(HIGH);  //turn off all 6 K155ID1
- shifter.write();    // set registers 74HC595
+ // digitOff(5);  //all correctly but .. 36 cycles per second
+ // digitOff(4);
+ // digitOff(3);
+ // digitOff(2);
+ // digitOff(1);
+ // digitOff(0);
+// shifter.setAll(HIGH);  //turn off all 6 K155ID1
+// shifter.write();    // set registers 74HC595
+
  /* byte l0 = NumberArray[0] ; //fast Shifter byte for lamp 0 -  tens hours
  byte l1 = NumberArray[1] ;
  byte l2 = NumberArray[2] ;
@@ -3046,7 +3084,7 @@ shifter.setAll(HIGH);  //turn off all 6 K155ID1
         }
       case DIMMED:
         {
-          digitOnTime[i] = DIGIT_DISPLAY_ON;
+          digitOnTime[i] = DIGIT_DISPLAY_ON;  //0
           digitOffTime[i] = DIM_VALUE;
           break;
         }
@@ -3092,7 +3130,7 @@ shifter.setAll(HIGH);  //turn off all 6 K155ID1
 
     // manage scrolling, count the digits down
     if (tmpDispType == SCROLL) {
-      digitSwitchTime[i] = DIGIT_DISPLAY_OFF;
+      digitSwitchTime[i] = DIGIT_DISPLAY_OFF;   //1000
       if (NumberArray[i] != currNumberArray[i]) {
         if (fadeState[i] == 0) {
           // Start the fade
@@ -3100,7 +3138,7 @@ shifter.setAll(HIGH);  //turn off all 6 K155ID1
         }
 
         if (fadeState[i] == 1) {
-          // finish the fade
+          // finish the fade  .. scroll
           fadeState[i] = 0;
           currNumberArray[i] = currNumberArray[i] - 1;
         } else if (fadeState[i] > 1) {
@@ -3111,7 +3149,7 @@ shifter.setAll(HIGH);  //turn off all 6 K155ID1
     // manage fading, each impression we show 1 fade step less of the old
     // digit and 1 fade step more of the new
     } else if (tmpDispType == FADE) {
-      if (NumberArray[i] != currNumberArray[i]) {
+      if (NumberArray[i] != currNumberArray[i]) {    // first time currNumberArray[i] = 0;
         if (fadeState[i] == 0) {
           // Start the fade
           fadeState[i] = fadeSteps;
@@ -3123,7 +3161,7 @@ shifter.setAll(HIGH);  //turn off all 6 K155ID1
         // finish the fade
         fadeState[i] = 0;
         currNumberArray[i] = NumberArray[i];
-        digitSwitchTime[i] = DIGIT_DISPLAY_COUNT;
+        digitSwitchTime[i] = DIGIT_DISPLAY_COUNT; //1000
       } else if (fadeState[i] > 1) {
         // Continue the fade
         fadeState[i] = fadeState[i] - 1;
@@ -3133,10 +3171,11 @@ shifter.setAll(HIGH);  //turn off all 6 K155ID1
       digitSwitchTime[i] = DIGIT_DISPLAY_COUNT;
       currNumberArray[i] = NumberArray[i];
     }
- // 6 tubes at one time
+ // 6 tubes at one time first loop
   }
+  // 6 tubes set - inner cycle 1000 times  (dispCount) (change -2-nd loop all together 6 digits)
     for (int timer = 0 ; timer < dispCount ; timer++) {
-      if (timer == digitOnTime[0]) {
+      if (timer == digitOnTime[0]) {    //fade or transition - turn on together 2 digit
       //  digitOn(i, currNumberArray[i],l0,l1,l2,l3,l4,l5);   // i=0 .. i=5 lamp ten of hour ... ones of seconds, currNumberArray[i] - digit to display at [i] position 
        digitOn(0, currNumberArray[0]);
       }
@@ -3161,8 +3200,8 @@ shifter.setAll(HIGH);  //turn off all 6 K155ID1
        digitOn(5, currNumberArray[5]);
       }
 
-      if  (timer == digitSwitchTime[0]) {
-       // SetSN74141Chip(i,NumberArray[i],l0,l1,l2,l3,l4,l5);   //fade or transition
+      if  (timer == digitSwitchTime[0]) {     //fade or transition - turn on together 2 digit
+       // SetSN74141Chip(i,NumberArray[i],l0,l1,l2,l3,l4,l5); 
         SetSN74141Chip(0,NumberArray[0]);
       }
             if  (timer == digitSwitchTime[1]) {
@@ -3841,4 +3880,3 @@ void setNewNextMode(int newNextMode) {
   nextMode = newNextMode;
   currentMode = newNextMode - 1;
 }
-
