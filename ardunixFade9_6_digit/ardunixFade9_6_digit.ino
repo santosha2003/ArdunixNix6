@@ -7,7 +7,7 @@
 #include <Shifter.h>
 #include <DS3231.h>             // https://github.com/NorthernWidget/DS3231 (Wickert 1.0.2) ? //install from lib manager!
 #include <Time.h>
-#include <TimeLib.h>            // https://github.com/michaelmargolis/arduino_time    //Óñòàíîâèòü ÷åðåç ìåíåäæåð áèáëèîòåê 
+#include <TimeLib.h>            // https://github.com/michaelmargolis/arduino_time    //Установить через менеджер библиотек 
 
 
 // Other parts of the code, broken out for clarity //make folder in arduino libraries - copy to folder
@@ -188,7 +188,7 @@ DS3231_T=21.0
 
 // const byte rgb_backlight_curve[] = {0, 16, 32, 48, 64, 80, 99, 112, 128, 144, 160, 176, 192, 208, 224, 240, 255};
 
-#define DIGIT_COUNT 6                 // 6 ëàìï èëè 4
+#define DIGIT_COUNT 6                 // 6 ламп или 4
 
 #define DATE_FORMAT_MIN                 0
 #define DATE_FORMAT_YYMMDD              0
@@ -216,7 +216,7 @@ DS3231_T=21.0
 #define BLANK_MODE_MAX                  2
 #define BLANK_MODE_DEFAULT              2
 
-#define BACKLIGHT_MIN                   0  //ïîäñâåòêó îòêëþ÷èë
+#define BACKLIGHT_MIN                   0  //подсветку отключил
 #define BACKLIGHT_FIXED                 0   // Just define a colour and stick to it
 #define BACKLIGHT_PULSE                 1   // pulse the defined colour
 #define BACKLIGHT_CYCLE                 2   // cycle through random colours
@@ -231,23 +231,23 @@ DS3231_T=21.0
 #define CYCLE_SPEED_DEFAULT             10
 
 // Display handling
-#define DIGIT_DISPLAY_COUNT   1000 // The number of times to traverse inner fade loop per digit
+#define DIGIT_DISPLAY_COUNT   1000 // 500 //1000 // The number of times to traverse inner fade loop per digit
 #define DIGIT_DISPLAY_ON      0    // Switch on the digit at the beginning by default
-#define DIGIT_DISPLAY_OFF     999  // Switch off the digit at the end by default
+#define DIGIT_DISPLAY_OFF    999 // 499  // Switch off the digit at the end by default
 #define DIGIT_DISPLAY_NEVER   -1   // When we don't want to switch on or off (i.e. blanking)
-#define DISPLAY_COUNT_MAX     2000 // Maximum value we can set to
-#define DISPLAY_COUNT_MIN     500  // Minimum value we can set to
+#define DISPLAY_COUNT_MAX     1001 // Maximum value we can set to
+#define DISPLAY_COUNT_MIN     300  // Minimum value we can set to
 
-#define MIN_DIM_DEFAULT       60  // The default minimum dim count
-#define MIN_DIM_MIN           100  // The minimum dim count
-#define MIN_DIM_MAX           500  // The maximum dim count
+#define MIN_DIM_DEFAULT       120  // The default minimum dim count
+#define MIN_DIM_MIN           10  // The minimum dim count
+#define MIN_DIM_MAX           350  // The maximum dim count
 
 #define SENSOR_LOW_MIN        0
 #define SENSOR_LOW_MAX        900
-#define SENSOR_LOW_DEFAULT    100  // Dark
+#define SENSOR_LOW_DEFAULT    60 //100  // Dark
 #define SENSOR_HIGH_MIN       0
 #define SENSOR_HIGH_MAX       900
-#define SENSOR_HIGH_DEFAULT   700 // Bright
+#define SENSOR_HIGH_DEFAULT   450 //700 // Bright
 
 #define SENSOR_SMOOTH_READINGS_MIN     1
 #define SENSOR_SMOOTH_READINGS_MAX     255
@@ -270,7 +270,7 @@ DS3231_T=21.0
 #define PWM_OFF_MIN       50
 
 // How quickly the scroll works
-#define SCROLL_STEPS_DEFAULT 4
+#define SCROLL_STEPS_DEFAULT 6
 #define SCROLL_STEPS_MIN     1
 #define SCROLL_STEPS_MAX     40
 
@@ -279,9 +279,9 @@ DS3231_T=21.0
 #define ANTI_GHOST_DEFAULT              0
 
 // The number of dispay impessions we need to fade by default
-// 100 is about 1 second
-#define FADE_STEPS_DEFAULT 50
-#define FADE_STEPS_MAX     200
+// 100 is about 1 second   //50 is 1 sec
+#define FADE_STEPS_DEFAULT 42
+#define FADE_STEPS_MAX     130
 #define FADE_STEPS_MIN     20
 
 #define SECS_MAX  60
@@ -376,9 +376,9 @@ DS3231_T=21.0
 
 #define TEMP_DISPLAY_MODE_DUR_MS        5000
 
-#define USE_LDR_DEFAULT                 true  //light detect resistor  // ôîòîðåçèñòîð åñëè ñäåëàþ íà ñòàòèêå ðåãóëèðîâêó áåç äåðãàíèé
-                                       //  ìîæíî ñíèæàòü íàïðÿæåíèå íà  mc34063 èëè ïðîáîâàòü ãàñèòü öèôðû è âêëþ÷àòü 1 - 2 -3 -4 -5 öèêëîâ èç 10 
-                                        // ñåé÷àñ âðåìÿ öèêëà 50 ìñ - ýòî ìîæåò áûòü äåðãàíèå - óáðàòü çàäåðæêó è áóäåò 6 - 10 ìñ ÷òî íå çàìåòíî ñèëüíî ìåðöàíèå 
+#define USE_LDR_DEFAULT                 true  //light detect resistor  // фоторезистор если сделаю на статике регулировку без дерганий
+                                       //  можно снижать напряжение на  mc34063 или пробовать гасить цифры и включать 1 - 2 -3 -4 -5 циклов из 10 
+                                        // сейчас время цикла 50 мс - это может быть дергание - убрать задержку и будет 6 - 10 мс что не заметно сильно мерцание 
 
 // Limit on the length of time we stay in test mode
 #define TEST_MODE_MAX_MS                60000
@@ -443,20 +443,23 @@ int RTC_hours, RTC_minutes, RTC_seconds, RTC_day, RTC_month, RTC_year, RTC_day_o
 byte NumberArray[6]    = {0, 0, 0, 0, 0, 0};
 byte currNumberArray[6] = {0, 0, 0, 0, 0, 0};
 byte displayType[6]    = {FADE, FADE, FADE, FADE, FADE, FADE};
-byte fadeState[6]      = {0, 0, 0, 0, 0, 0};
+byte fadeState[6] = {0, 0, 0, 0, 0, 0};
 byte OnOff[6]    = {1, 1, 1, 1, 1, 1};    //current state of digit at this time - use for dimming - blink - fade 
 byte ourIP[4]          = {0, 0, 0, 0}; // set by the WiFi module, if attached
-
+byte threesectimer = 0;
+  int digitOnTime[6];
+  int digitOffTime[6];
+  int digitSwitchTime[6]= {0, 0, 0, 0, 0, 0};
 // how many fade steps to increment (out of DIGIT_DISPLAY_COUNT) each impression
-// 100 is about 1 second
-int fadeSteps = FADE_STEPS_DEFAULT;
-int digitOffCount = DIGIT_DISPLAY_OFF;
+// 100 // 50 is about 1 second
+int fadeSteps = FADE_STEPS_DEFAULT;  //45
+int digitOffCount = DIGIT_DISPLAY_OFF;  //999
 int scrollSteps = SCROLL_STEPS_DEFAULT;
 boolean scrollback = true;
 boolean fade = true;
 byte antiGhost = ANTI_GHOST_DEFAULT;  // not use - approx. 189 v max 
 int dispCount = DIGIT_DISPLAY_COUNT + antiGhost;
-float fadeStep = DIGIT_DISPLAY_COUNT / fadeSteps;
+float fadeStep = digitOffCount / fadeSteps;  //DIGIT_DISPLAY_COUNT
 
 // For software blinking
 int blinkCounter = 0;
@@ -466,7 +469,8 @@ boolean blinkState = true;
 boolean blankLeading = false;
 
 // Dimming value
-const int DIM_VALUE = DIGIT_DISPLAY_COUNT / 5;
+//const int DIM_VALUE = DIGIT_DISPLAY_COUNT / 5;  //200  
+ int DIM_VALUE = 25;  //200 is too bright  
 int minDim = MIN_DIM_DEFAULT;
 
 unsigned int tempDisplayModeDuration;      // time for the end of the temporary display
@@ -474,7 +478,7 @@ int  tempDisplayMode;
 
 int acpOffset = 0;        // Used to provide one arm bandit scolling
 int acpTick = 0;          // The number of counts before we scroll
-boolean suppressACP = false;
+boolean suppressACP = true;
 byte slotsMode = SLOTS_MODE_DEFAULT;
 
 byte currentMode = MODE_TIME;   // Initial cold start mode
@@ -515,6 +519,8 @@ boolean triggeredThisSec = false;
 
 byte useRTC = true;  // true if we detect an RTC  //now use  - true
 byte useWiFi = 0; // the number of minutes ago we recevied information from the WiFi module, 0 = don't use WiFi
+byte cycleCount = 0;
+byte cycleSpeed = CYCLE_SPEED_DEFAULT;
 
   //byte Currentday;
   //DateTime now = RTC.now(); Currentday = now.day();     // RTClib not use - now DS3231
@@ -564,7 +570,82 @@ void setup(){
   pinMode(SRCLK_Pin, OUTPUT);
     // Grounding the input pin causes it to actuate
   pinMode(inputPin1, INPUT_PULLUP ); // set the input pin 1    // add resistor
-  
+ 
+  // вернул настройку HV  и сброс до заводских настроек (нажать кнопку при включении)
+  /* disable global interrupts while we set up them up */
+  cli();
+
+  // **************************** HV generator ****************************
+
+  TCCR1A = 0;    // disable all PWM on Timer1 whilst we set it up
+  TCCR1B = 0;    // disable all PWM on Timer1 whilst we set it up
+
+  // Configure timer 1 for Fast PWM mode via ICR1, with prescaling=1
+  TCCR1A = (1 << WGM11);
+  TCCR1B = (1 << WGM13) | (1 << WGM12) | (1 << CS10);
+
+  tccrOff = TCCR1A;
+
+  TCCR1A |= (1 <<  COM1A1);  // enable PWM on port PD4 in non-inverted compare mode 2
+
+  tccrOn = TCCR1A;
+
+  // Set up timer 2 like timer 0 (for RGB leds)
+  TCCR2A = (1 << COM2B1) | (1 << WGM21) | (1 << WGM20);
+  TCCR2B = (1 << CS22);
+
+  // we don't need the HV yet, so turn it off
+  TCCR1A = tccrOff;
+
+  /* enable global interrupts */
+  sei();
+
+  // **********************************************************************
+
+  // Set up the PRNG with something so that it looks random
+  randomSeed(analogRead(LDRPin));
+
+  // Test if the button is pressed for factory reset
+  for (int i = 0 ; i < 20 ; i++ ) {
+    button1.checkButton(nowMillis);
+  }
+
+  // User requested factory reset
+  if (button1.isButtonPressedNow()) {
+    // do this before the flashing, because this way we can set up the EEPROM to
+    // autocalibrate on first start (press factory reset and then power off before
+    // flashing ends)
+    EEPROM.write(EE_HVG_NEED_CALIB, true);
+
+    // Flash some ramdom c0lours to signal that we have accepted the factory reset
+ /*   for (int i = 0 ; i < 60 ; i++ ) {
+      randomRGBFlash(20);
+     }
+
+  */
+    // mark that we need the EEPROM setup
+    EEPROM.write(EE_NEED_SETUP, true);
+  }
+
+  // If the button is held down while we are flashing, then do the test pattern
+  boolean doTestPattern = false;
+
+  // Detect factory reset: button pressed on start or uninitialised EEPROM
+  if (EEPROM.read(EE_NEED_SETUP)) {
+    doTestPattern = true;
+  }
+
+  // Clear down any spurious button action
+  button1.reset();
+
+  // Test if the button is pressed for factory reset
+  for (int i = 0 ; i < 20 ; i++ ) {
+    button1.checkButton(nowMillis);
+  }
+
+  if (button1.isButtonPressedNow()) {
+    doTestPattern = true;
+  } 
    if (debug) Serial.println("Vklu4ilsja i'M Citten Lynx");
 // comment - first run
 // factoryReset();
@@ -578,27 +659,26 @@ void setup(){
    Serial.print(" ");//test what reads
      Serial.println(fadeSteps);  //test what reads
  }
-     fadeSteps=49; 
+     // fadeSteps=49; // for test    now 52 // 46 big cycles per second *1000 display timer  46000 установок регистров в секунду, а если 2 цифры сразу то 100000 (fade)  
 
 
-  // initialise the internal time (in case we don't find the time provider)  ïåðâàÿ óñòàíîâêà âðåìåíè çäåñü
+  // initialise the internal time (in case we don't find the time provider)  первая установка времени здесь
  //1-st try  getRTCTime();   // try to autodetect 
   // Startday = now.day();
   
     // de-bug - rtc ds3231 works - uncomment line run? comment line - run again 
  //(comment - after first run) 
- setTime(2, 48, 47, 5, 6, 2021);  // ! è îíî ðàáîòàåò  16 37 36 ÷åðåç 3 ìèíóòû     Works - manual set time
+ setTime(2, 48, 47, 5, 6, 2021);  // ! и оно работает  16 37 36 через 3 минуты     Works - manual set time
     // de-bug - rtc ds3231 works - uncomment line run? comment line - run again   !! works!! time read OK from DS3231 chip
  useRTC = true;   // autodetect near 
  
   DateTime compiled = DateTime(__DATE__, __TIME__);  
   //set time by current (DateTime compiled or manual)  run once - comment line   
   
-  byte dayOfWeek= weekday(); //3   // 0- sunday âîñêðåñåíüå óñòàíîâêà ïåðâûé ðàç - âðó÷íóþ  !! 1 ðàç ïîñëå íàñòðîéêè  
- // setDS3231time(second(), minute(), hour(), dayOfWeek, day(), month(), year());  // óñòàíîâêà ÷àñîâ DS3231 ïî âðåìåíè êîìïüþòåðà  
+  byte dayOfWeek= weekday(); //3   // 0- sunday воскресенье установка первый раз - вручную  !! 1 раз после настройки  
+ // setDS3231time(second(), minute(), hour(), dayOfWeek, day(), month(), year());  // установка часов DS3231 по времени компьютера  
  
-  setRTC();   //ok works - 1-st run
-   
+ // setRTC();   //ok works - 1-st run
 
 /*
         Clock.setMinute(24);//Set the minute 
@@ -630,9 +710,11 @@ byte year2digit=year() -2000;
  Serial.print("-doW-");
     Serial.println(dayOfWeek);
   }
+  
+
 
 /*
-// óñòàíîâêà çíà÷åíèé âðåìåíè (ïîïûòêà)   achtung
+// установка значений времени (попытка)   achtung
 // achtung this routine works - arduino set time into Maxim DS3231 (vcc=5, vbat=3 - 2 diodes, sda pin 15 to arduino nano A4, scl 16 - A5, R pullup 5k6 , R reset pin pull up 100k)
  dayOfWeek=  Clock.getDoW();   // get or set 
    Wire.beginTransmission(DS3231_I2C_ADDRESS);
@@ -665,6 +747,10 @@ Clock.setMinute(minute());
     // Make sure the clock keeps running even on battery
     if (!Clock.oscillatorCheck())
       Clock.enableOscillator(true, true, 0);
+
+       // если зависает то смотреть монитор порта и закомментировать строку ниже  i found what may hung up 
+ if (useRTC)  getRTCTime();   
+ 
    if (debug){
      Serial.print("verify ds32321 - ");
       Serial.print(hours);
@@ -678,6 +764,57 @@ Clock.setMinute(minute());
     Serial.print(months);
     Serial.print("-");
     Serial.println(days);
+  }
+   if (doTestPattern) {
+    boolean oldUseLDR = useLDR;
+//    byte oldBacklightMode = backlightMode;
+
+    // reset the EEPROM values
+    factoryReset();
+
+    // turn off LDR
+    useLDR = false;
+
+    // turn off Scrollback
+    scrollback = false;
+
+    // All the digits on full
+    allBright();
+
+    int secCount = 0;
+    lastCheckMillis = millis();
+
+    boolean inLoop = true;
+
+    // We don't want to stay in test mode forever
+    long startTestMode = lastCheckMillis;
+
+    while (inLoop) {
+      nowMillis = millis();
+      if (nowMillis - lastCheckMillis > 1000) {
+                lastCheckMillis = nowMillis;
+        secCount++;
+        secCount = secCount % 10;
+      }
+
+      // turn off test mode
+      blankTubes = (nowMillis - startTestMode > TEST_MODE_MAX_MS);
+
+      loadNumberArraySameValue(secCount);
+      outputDisplay();
+          //  checkHVVoltage();
+
+//      setLedsTestPattern(nowMillis);
+      button1.checkButton(nowMillis);
+
+      if (button1.isButtonPressedNow() && (secCount == 8)) {
+        inLoop = false;
+        blankTubes = false;
+      }
+    }
+
+    useLDR = oldUseLDR;
+  //  backlightMode = oldBacklightMode;
   }
 /* debug eeprom values 0 50 2 0 100 0 0
 0 4 700 100 1 0
@@ -799,10 +936,27 @@ byte Startday;
         Serial.print("-");
     Serial.println(c);
   }
+// Clear down any spurious button action
+  button1.reset();
 
-
+  // initialise the internal time (in case we don't find the time provider)
   nowMillis = millis();
+ // setTime(12, 34, 56, 1, 3, 2017);
+ // getRTCTime();
 
+  // Show the version for 1 s
+  tempDisplayMode = TEMP_MODE_VERSION;
+  tempDisplayModeDuration = TEMP_DISPLAY_MODE_DUR_MS;
+
+  // don't blank anything right now
+  blanked = false;
+  setTubesAndLEDSBlankMode();
+
+  // mark that we have done the EEPROM setup
+  EEPROM.write(EE_NEED_SETUP, false);
+
+  // enable watchdog
+  wdt_enable(WDTO_8S);
  
 
 }
@@ -820,7 +974,7 @@ void loop(){
       //    performOncePerDayProcessing();
         }
         
-    //    performOncePerHourProcessing();
+        performOncePerHourProcessing();
       }
       
       performOncePerMinuteProcessing();
@@ -916,7 +1070,7 @@ if (debug){
     processCurrentMode(currentMode);
   }
   // get the LDR ambient light reading
-  digitOffCount = getDimmingFromLDR();
+  digitOffCount = getDimmingFromLDR();   // 120 dark (night)  999 bright - day
   fadeStep = digitOffCount / fadeSteps;
  
   // One armed bandit trigger every 10th minute
@@ -926,10 +1080,10 @@ if (debug){
         // suppress ACP when fully dimmed
         if (suppressACP) {
           if (digitOffCount > minDim) {
-            acpOffset = 0;
+            acpOffset = 0;        //  0 - не дергаю однорукого бандита  acp off
           }
         } else {
-          acpOffset = 1;
+          acpOffset = 1;   //  0 ? 1 is anti poison on // effects at 15 +50 seconds - do anti-poison too
         }
       }
     }
@@ -952,7 +1106,7 @@ if (debug){
   } else {
     // Digit burn mode
 
-    // Santosha - turn on digit using Shifter but useless - current set as normal light
+    // Santosha - turn on digit using Shifter // but useless - current set as normal light // dynamic mode - max bright
  OnOff[0]=0;
  OnOff[1]=0;
  OnOff[2]=0;
@@ -1082,7 +1236,7 @@ void setNextMode(int displayMode) {
       }
     case MODE_FADE_STEPS_UP:
     case MODE_FADE_STEPS_DOWN: {
-        loadNumberArrayConfInt(fadeSteps, displayMode);
+        loadNumberArrayConfInt(fadeSteps, displayMode);  //50 .. 45   not more than 1 second = 46 // 49 cycles
         displayConfig();
         break;
       }
@@ -1433,7 +1587,8 @@ void processCurrentMode(int displayMode) {
         }
         loadNumberArrayConfInt(fadeSteps, displayMode);
         displayConfig();
-        fadeStep = DIGIT_DISPLAY_COUNT / fadeSteps;
+        // fadeStep = DIGIT_DISPLAY_COUNT / fadeSteps;  // if bright 1000 = 100%  1000 /50 =20
+      fadeStep = digitOffCount / fadeSteps;
         break;
       }
     case MODE_FADE_STEPS_DOWN: {
@@ -1445,7 +1600,8 @@ void processCurrentMode(int displayMode) {
         }
         loadNumberArrayConfInt(fadeSteps, displayMode);
         displayConfig();
-        fadeStep = DIGIT_DISPLAY_COUNT / fadeSteps;
+       // fadeStep = DIGIT_DISPLAY_COUNT / fadeSteps;
+         fadeStep = digitOffCount / fadeSteps;
         break;
       }
     case MODE_DISPLAY_SCROLL_STEPS_DOWN: {
@@ -1603,9 +1759,9 @@ int getDimmingFromLDR() {
     if (sensorSmoothedResult < dimDark) sensorSmoothedResult = dimDark;
     if (sensorSmoothedResult > dimBright) sensorSmoothedResult = dimBright;
 
- // no ldr but useLDR true (test)
- //sensorSmoothedResult = dimDark +1;
- sensorSmoothedResult = dimBright;
+ // no ldr but useLDR true (test) =dimBright (999)  // фоторезистор - если не запаян то установить значение на полную яркость
+ sensorSmoothedResult = dimDark +1;
+ //sensorSmoothedResult = dimBright;
  
     sensorSmoothedResult = (sensorSmoothedResult - dimDark) * sensorFactor;
 
@@ -1697,10 +1853,34 @@ void doDotBlink()
 // Called once per second
 // ************************************************************
 void performOncePerSecondProcessing() {
-
+ 
   // Store the current value and reset
  lastImpressionsPerSec = impressionsPerSec;
   impressionsPerSec = 0;
+  threesectimer= threesectimer+1 ;
+  if (threesectimer==3) { 
+    threesectimer=0;
+  int     digitSwitchTime[6]= {0, 0, 0, 0, 0, 0};   //clear fade effect each 3 seconds  //was 3-4 digit turn on at one time in 2 -3 tubes tens - ones seconds
+  //byte OnOff[6]    = {0, 0, 0, 0, 0, 0};
+  byte fadeState[6] = {0, 0, 0, 0, 0, 0};
+                  // initialise the slots values temperature 
+                loadNumberArrayTemp(11);
+                transition.setAlternateValues();
+                loadNumberArrayTime();
+                transition.setRegularValues();
+                allFadeOrNormal(DO_NOT_APPLY_LEAD_0_BLANK);
+
+               // transition.start(nowMillis);
+  // убрал - моргает 
+  /* digitOff(5);  
+  digitOff(4);
+  digitOff(3);
+  digitOff(2);
+  digitOff(1);
+  digitOff(0);
+  */
+  
+  }
 
   // Change the direction of the pulse
 //  upOrDown = !upOrDown;
@@ -1744,7 +1924,7 @@ void performOncePerSecondProcessing() {
 
   // feed the watchdog
   wdt_reset();
-     // getRTCTime();   //ïåðåãîðèò ÷åðåç íåäåëþ èëè ñÿäåò áàòàðåéêà - âêëþ÷èòü áàòàðåéêó ÷åðåç 2 äèîäèêà
+     // getRTCTime();   //перегорит через неделю или сядет батарейка - включить батарейку через 2 диодика
 
 
 //       byte   secondes = second();
@@ -1763,32 +1943,61 @@ void performOncePerSecondProcessing() {
 // Called once per minute
 // ************************************************************
 void performOncePerMinuteProcessing() {
-  if (useWiFi > 0) {
-    if (useWiFi == MAX_WIFI_TIME) {
-      // We recently got an update, send to the RTC (if installed)
-      setRTC();      
-    }
-    useWiFi--;
-  } else {
-    // get the time from the external RTC provider - (if installed)
-  if (useRTC)  getRTCTime();
-  }
-  digitalClockDisplay()  ; //print time - digits as hh:mm:ss to serial port 57600
+
+ // digitalClockDisplay()  ; //print time - digits as hh:mm:ss to serial port 57600
    if (debug)Serial.print(lastImpressionsPerSec);   // cycles per second - delay 50 show 20 cycles
    if (debug)Serial.println();
  /*      nixietrainer();      // anti cathodes poisoning  1.8sec all
 // if (debug){
   if (useRTC) testDS3231TempSensor();  //display temperature
 // }
- shifter.setAll(HIGH);   // off all tubes
-     shifter.write(); //send changes to the chain and display them
-     */
+ */
+ //shifter.setAll(HIGH);   // off all tubes
+  //   shifter.write(); //send changes to the chain and display them
+     
+ /*        
+  *    время с ds3231 - раз в час поменял     
+  *         allFadeOrNormal(DO_NOT_APPLY_LEAD_0_BLANK);
+ OnOff[0]=0;
+ OnOff[1]=0;
+ OnOff[2]=0;
+ OnOff[3]=0;
+ OnOff[4]=0;
+ OnOff[5]=0;
+                 // initialise the slots values temperature //  после чтения чипа часов есть ошибка - засветка третьей одновременно цифры нуля или единички на 4 лампах кроме часовых!
+                loadNumberArrayTemp(11);
+                transition.setAlternateValues();
+                loadNumberArrayTime();
+                transition.setRegularValues();
+                allFadeOrNormal(DO_NOT_APPLY_LEAD_0_BLANK);  
+                */
+int     digitSwitchTime[6]= {0, 0, 0, 0, 0, 0};       // OK fade 2 digit together Works //  заработал режим переключения с плавным гашением  was glitch 3 digits together each minute..
 }
 
 // ************************************************************
 // Called once per hour
 // ************************************************************
 void performOncePerHourProcessing() {
+
+    //  считывание ds3231 перенес на 1 раз в час .. глюк - сбивается режим fade  .. не только - сбрасываю еще  digitSwithcTime
+    if (useWiFi > 0) {
+    if (useWiFi == MAX_WIFI_TIME) {
+      // We recently got an update, send to the RTC (if installed)
+      setRTC();      
+    }
+    useWiFi--;
+  } else {
+    // get the time from the external RTC provider - (if installed) one  time each minute  перенес на каждый час 
+  if (useRTC)  getRTCTime();
+  }
+                // initialise the slots values temperature //  после чтения чипа часов есть ошибка - засветка третьей одновременно цифры нуля или единички на 4 лампах кроме часовых!
+                loadNumberArrayTemp(11);
+                transition.setAlternateValues();
+                loadNumberArrayTime();
+                transition.setRegularValues();
+                allFadeOrNormal(DO_NOT_APPLY_LEAD_0_BLANK);
+
+  
 }
 
 //subs
@@ -1837,7 +2046,7 @@ void testDS3231TempSensor()
   int wholeDegrees = int(temp);
   temp = (temp - float(wholeDegrees)) * 100.0;
   int fractDegrees = int(temp);
-       byte   minutes = wholeDegrees; // Rus òåìïåðàòóðà íà 6 ëàìïàõ - ïåðâûå 2 ãàñÿòñÿ, ïîòîì öåëàÿ ÷àñòü - ãðàäóñû, ïîòîì äðîáíàÿ.
+       byte   minutes = wholeDegrees; // Rus температура на 6 лампах - первые 2 гасятся, потом целая часть - градусы, потом дробная.
  byte secondes = fractDegrees;
  //byte hours = hour();
  if (debug) {
@@ -2235,19 +2444,40 @@ void saveEEPROMValues() {
 void readEEPROMValues() {
   hourMode = EEPROM.read(EE_12_24);
   fadeSteps = EEPROM.read(EE_FADE_STEPS);
+    if ((fadeSteps < FADE_STEPS_MIN) || (fadeSteps > FADE_STEPS_MAX)) {
+    fadeSteps = FADE_STEPS_DEFAULT;
+  }
   dateFormat = EEPROM.read(EE_DATE_FORMAT);
   dayBlanking = EEPROM.read(EE_DAY_BLANKING);
   dimDark = EEPROM.read(EE_DIM_DARK_HI) * 256 + EEPROM.read(EE_DIM_DARK_LO);
+    if ((dimDark < SENSOR_LOW_MIN) || (dimDark > SENSOR_LOW_MAX)) {
+    dimDark = SENSOR_LOW_DEFAULT;
+  }
   blankLeading = EEPROM.read(EE_BLANK_LEAD_ZERO);
   scrollback = EEPROM.read(EE_SCROLLBACK);
   fade = EEPROM.read(EE_FADE);
   scrollSteps = EEPROM.read(EE_SCROLL_STEPS);
   dimBright = EEPROM.read(EE_DIM_BRIGHT_HI) * 256 + EEPROM.read(EE_DIM_BRIGHT_LO);
+    if ((dimBright < SENSOR_HIGH_MIN) || (dimBright > SENSOR_HIGH_MAX)) {
+    dimBright = SENSOR_HIGH_DEFAULT;
+  }
   sensorSmoothCountLDR = EEPROM.read(EE_DIM_SMOOTH_SPEED);
+    if ((sensorSmoothCountLDR < SENSOR_SMOOTH_READINGS_MIN) || (sensorSmoothCountLDR > SENSOR_SMOOTH_READINGS_MAX)) {
+    sensorSmoothCountLDR = SENSOR_SMOOTH_READINGS_DEFAULT;
+  }
   suppressACP = EEPROM.read(EE_SUPPRESS_ACP);
   blankHourStart = EEPROM.read(EE_HOUR_BLANK_START);
+    if ((blankHourStart < 0) || (blankHourStart > HOURS_MAX)) {
+    blankHourStart = 0;
+  }
   blankHourEnd = EEPROM.read(EE_HOUR_BLANK_END);
+    if ((blankHourEnd < 0) || (blankHourEnd > HOURS_MAX)) {
+    blankHourEnd = 7;
+  }
   minDim = EEPROM.read(EE_MIN_DIM_HI) * 256 + EEPROM.read(EE_MIN_DIM_LO);
+    if ((minDim < MIN_DIM_MIN) || (minDim > MIN_DIM_MAX)) {
+    minDim = MIN_DIM_DEFAULT;
+  }
   antiGhost = EEPROM.read(EE_ANTI_GHOST);
   dispCount = DIGIT_DISPLAY_COUNT + antiGhost;
   blankMode= EEPROM.read(EE_BLANK_MODE);
@@ -2718,72 +2948,57 @@ void loadNumberArrayIP(byte byte1, byte byte2) {
 // Santosha - edit for 6 K155ID1 - 3 - 74hc595, Shifter lib - set one digit "value", set another as is
 // decodeDigit not use - digit conection direct, 0-0 , 1-1 into nixie subroutine 
 // not able reading current state of registers - calculate which digits need turn on at this time - !test now  (OK)
-// 46 impression per sec
+// 46 impression per sec  - 53 (correction) turn off 1 digit, OnOff variable not use - switch digits for Fade
+// this use for Fade - one digit change to another
+// Fade - 60 steps - each step * 120 minDim // 30-300 times see OK ?? (max bright 1000) not more 1 second - when 46 impr/ sec check - not more 45
 // ************************************************************
 // void SetSN74141Chip(int digit, int value, byte l0,byte l1,byte l2,byte l3,byte l4,byte l5)
 void SetSN74141Chip(int digit, int value) {
-
+// note that digit turns on but not save state into OnOff variable
+OnOff[digit]= 1;         // now digit turns off (on for transition)  ..   по отладке 46 раз в секунду основной цикл - не моргает. (46000 /sec digit)
 // test - turn on only current digit (faster) do not change state of another registry bits
   switch (digit) {
    // case 0: PORTC = PORTC | B00001000; break; // PC3 - equivalent to digitalWrite(ledPin_a_1,HIGH);
    case 0: {
- // nixie (20, l5);  //seconds - lamp 5 -6  - Shifter fast setPin 4 pins connected to decoder K155ID1 74141
-//  nixie (16, l4);
-//  nixie (12, l3);
-//  nixie (8, l2);  //minutes
-//  nixie (4, l1);
+ 
   nixie (0, value);  //hours lamp 1-2
    }
    // case 1: PORTC = PORTC | B00000100; break; // PC2 - equivalent to digitalWrite(ledPin_a_2,HIGH);
    case 1: {
- // nixie (20, l5);  //seconds - lamp 5 -6 
-//  nixie (16, l4);
-//  nixie (12, l3);
- // nixie (8, l2);  //minutes
+
   nixie (4, value);
-//  nixie (0, l0);  //hours lamp 1-2
+
    }
    // case 2: PORTD = PORTD | B00010000; break; // PD4 - equivalent to digitalWrite(ledPin_a_3,HIGH);
    case 2: {
-//  nixie (20, l5);  //seconds - lamp 5 -6 
-//  nixie (16, l4);
-//  nixie (12, l3);
+
   nixie (8, value);  //minutes
-//  nixie (4, l1);
- // nixie (0, l0);  //hours lamp 1-2
+
    }
    
    // case 3: PORTD = PORTD | B00000100; break; // PD2 - equivalent to digitalWrite(ledPin_a_4,HIGH);
     case 3: {
- // nixie (20, l5);  //seconds - lamp 5 -6 
-//  nixie (16, l4);
+
   nixie (12, value);
- // nixie (8, l2);  //minutes
-//  nixie (4, l1);
-//  nixie (0, l0);  //hours lamp 1-2
+
    }
    // case 4: PORTD = PORTD | B00000010; break; // PD1 - equivalent to digitalWrite(ledPin_a_5,HIGH);
    case 4: {
- // nixie (20, l5);  //seconds - lamp 5 -6 
+
   nixie (16, value);
- // nixie (12, l3);
-//  nixie (8, l2);  //minutes
-//  nixie (4, l1);
- // nixie (0, l0);  //hours lamp 1-2
+
    }
    // case 5: PORTD = PORTD | B00000001; break; // PD0 - equivalent to digitalWrite(ledPin_a_6,HIGH);
 
    case 5: {
   nixie (20, value);  //seconds - lamp 5 -6 
- // nixie (16, l4);
- // nixie (12, l3);
- // nixie (8, l2);  //minutes
- // nixie (4, l1);
- // nixie (0, l0);  //hours lamp 1-2
+
    }
 
   }
-   /*   if (OnOff[0] == 0 ) {          // state for this time - off digits if they turn off now
+  
+ //useless .. 
+ if (OnOff[0] == 0 ) {          // state for this time - off digits if they turn off now
        shifter.setPin(0, HIGH);
        shifter.setPin(1, HIGH);
        shifter.setPin(2, HIGH);
@@ -2819,7 +3034,7 @@ void SetSN74141Chip(int digit, int value) {
        shifter.setPin(22, HIGH);
        shifter.setPin(23, HIGH);      
     }
- */
+  
 
      shifter.write();    // set registers 74HC595 - turn on output
      
@@ -2854,7 +3069,7 @@ void SetSN74141Chip(int digit, int value) {
 // ************************************************************
 // Do a single complete display, including any fading and
 // dimming requested. Performs the display loop
-// DIGIT_DISPLAY_COUNT times for each digit, with no delays.
+// DIGIT_DISPLAY_COUNT times for each digit, with no delays. (1000)
 // This is the heart of the display processing!
 //
 // Santosha - edit for 6 K155ID1 - 3 - 74hc595, Shifter lib
@@ -2862,11 +3077,17 @@ void SetSN74141Chip(int digit, int value) {
 // ************************************************************
 void outputDisplay()
 {
-  int digitOnTime;
-  int digitOffTime;
-  int digitSwitchTime;
+
   float digitSwitchTimeFloat;
   int tmpDispType;
+ // digitOff(5);  //all correctly but .. 36 cycles per second
+ // digitOff(4);
+ // digitOff(3);
+ // digitOff(2);
+ // digitOff(1);
+ // digitOff(0);
+// shifter.setAll(HIGH);  //turn off all 6 K155ID1
+// shifter.write();    // set registers 74HC595
 
  /* byte l0 = NumberArray[0] ; //fast Shifter byte for lamp 0 -  tens hours
  byte l1 = NumberArray[1] ;
@@ -2878,8 +3099,8 @@ void outputDisplay()
   // used to blank all leading digits if 0
   boolean leadingZeros = true;
 
-  for ( int i = 0 ; i < DIGIT_COUNT ; i ++ )
-  {
+  for ( int i = 0 ; i < DIGIT_COUNT ; i ++ )    {   // tubes 0 - 5,  5-seconds
+
     if (blankTubes) {
       tmpDispType = BLANKED;
     } else {
@@ -2889,44 +3110,45 @@ void outputDisplay()
     switch (tmpDispType) {
       case BLANKED:
         {
-          digitOnTime = DIGIT_DISPLAY_NEVER;
-          digitOffTime = DIGIT_DISPLAY_ON;
+          digitOnTime[i] = DIGIT_DISPLAY_NEVER;
+          digitOffTime[i] = DIGIT_DISPLAY_ON;  //0
           break;
         }
       case DIMMED:
         {
-          digitOnTime = DIGIT_DISPLAY_ON;
-          digitOffTime = DIM_VALUE;
+          digitOnTime[i] = DIGIT_DISPLAY_ON;  //0
+          digitOffTime[i] = DIM_VALUE;
           break;
         }
       case BRIGHT:
         {
-          digitOnTime = DIGIT_DISPLAY_ON;
-          digitOffTime = DIGIT_DISPLAY_OFF;
+          digitOnTime[i] = DIGIT_DISPLAY_ON; //0    0 .... 1000  on -0 *20mks off 20000 mks ~~ always on
+          digitOffTime[i]= DIGIT_DISPLAY_OFF;   //1000     
+          //digitOffTime = 995;
           break;
         }
       case FADE:
       case NORMAL:
         {
-          digitOnTime = DIGIT_DISPLAY_ON;
-          digitOffTime = digitOffCount;
+          digitOnTime[i] = DIGIT_DISPLAY_ON;  //0
+          digitOffTime[i] = digitOffCount;
           break;
         }
       case BLINK:
         {
           if (blinkState) {
-            digitOnTime = DIGIT_DISPLAY_ON;
-            digitOffTime = digitOffCount;
+            digitOnTime[i] = DIGIT_DISPLAY_ON;
+            digitOffTime[i] = digitOffCount;
           } else {
-            digitOnTime = DIGIT_DISPLAY_NEVER;
-            digitOffTime = DIGIT_DISPLAY_ON;
+            digitOnTime[i] = DIGIT_DISPLAY_NEVER;  // -1 = off all cycle
+            digitOffTime[i] = DIGIT_DISPLAY_ON;
           }
           break;
         }
       case SCROLL:
         {
-          digitOnTime = DIGIT_DISPLAY_ON;
-          digitOffTime = digitOffCount;
+          digitOnTime[i] = DIGIT_DISPLAY_ON;
+          digitOffTime[i] = digitOffCount;
           break;
         }
     }
@@ -2940,7 +3162,7 @@ void outputDisplay()
 
     // manage scrolling, count the digits down
     if (tmpDispType == SCROLL) {
-      digitSwitchTime = DIGIT_DISPLAY_OFF;
+      digitSwitchTime[i] = DIGIT_DISPLAY_OFF;   //1000
       if (NumberArray[i] != currNumberArray[i]) {
         if (fadeState[i] == 0) {
           // Start the fade
@@ -2948,7 +3170,7 @@ void outputDisplay()
         }
 
         if (fadeState[i] == 1) {
-          // finish the fade
+          // finish the fade  .. scroll
           fadeState[i] = 0;
           currNumberArray[i] = currNumberArray[i] - 1;
         } else if (fadeState[i] > 1) {
@@ -2959,11 +3181,11 @@ void outputDisplay()
     // manage fading, each impression we show 1 fade step less of the old
     // digit and 1 fade step more of the new
     } else if (tmpDispType == FADE) {
-      if (NumberArray[i] != currNumberArray[i]) {
+      if (NumberArray[i] != currNumberArray[i]) {    // first time currNumberArray[i] = 0;
         if (fadeState[i] == 0) {
           // Start the fade
-          fadeState[i] = fadeSteps;
-          digitSwitchTime = (int) fadeState[i] * fadeStep;
+          fadeState[i] = fadeSteps;       // set value for  Fade - 46 impr/sec  -> 45 max, 49 --> 47
+          digitSwitchTime[i] = (int) fadeState[i] * fadeStep;
         }
       }
 
@@ -2971,33 +3193,91 @@ void outputDisplay()
         // finish the fade
         fadeState[i] = 0;
         currNumberArray[i] = NumberArray[i];
-        digitSwitchTime = DIGIT_DISPLAY_COUNT;
+        digitSwitchTime[i] = DIGIT_DISPLAY_COUNT; //1000
       } else if (fadeState[i] > 1) {
         // Continue the fade
         fadeState[i] = fadeState[i] - 1;
-        digitSwitchTime = (int) fadeState[i] * fadeStep;
+        digitSwitchTime[i] = (int) fadeState[i] * fadeStep;
       }
     } else {
-      digitSwitchTime = DIGIT_DISPLAY_COUNT;
+      digitSwitchTime[i] = DIGIT_DISPLAY_COUNT;
       currNumberArray[i] = NumberArray[i];
     }
-
+ // 6 tubes at one time first loop
+  }
+  // 6 tubes set - inner cycle 1000 times  (dispCount) (change -2-nd loop all together 6 digits)
     for (int timer = 0 ; timer < dispCount ; timer++) {
-      if (timer == digitOnTime) {
+      if (timer == digitOnTime[0]) {    //fade or transition - turn on together 2 digit
       //  digitOn(i, currNumberArray[i],l0,l1,l2,l3,l4,l5);   // i=0 .. i=5 lamp ten of hour ... ones of seconds, currNumberArray[i] - digit to display at [i] position 
-       digitOn(i, currNumberArray[i]);
+       digitOn(0, currNumberArray[0]);
+      }
+      if (timer == digitOnTime[1]) {
+ 
+       digitOn(1, currNumberArray[1]);
+      }
+            if (timer == digitOnTime[2]) {
+   
+       digitOn(2, currNumberArray[2]);
+      }
+            if (timer == digitOnTime[3]) {
+  
+       digitOn(3, currNumberArray[3]);
+      }
+            if (timer == digitOnTime[4]) {
+
+       digitOn(4, currNumberArray[4]);
+      }
+            if (timer == digitOnTime[5]) {
+  
+       digitOn(5, currNumberArray[5]);
       }
 
-      if  (timer == digitSwitchTime) {
-       // SetSN74141Chip(i,NumberArray[i],l0,l1,l2,l3,l4,l5);
-        SetSN74141Chip(i,NumberArray[i]);
+      if  (timer == digitSwitchTime[0]) {     //fade or transition - turn on together 2 digit
+       // SetSN74141Chip(i,NumberArray[i],l0,l1,l2,l3,l4,l5); 
+        SetSN74141Chip(0,NumberArray[0]);
+      }
+            if  (timer == digitSwitchTime[1]) {
+
+        SetSN74141Chip(1,NumberArray[1]);
+      }
+      if  (timer == digitSwitchTime[2]) {
+  
+        SetSN74141Chip(2,NumberArray[2]);
+      }
+      if  (timer == digitSwitchTime[3]) {
+ 
+        SetSN74141Chip(3,NumberArray[3]);
+      }
+      if  (timer == digitSwitchTime[4]) {
+ 
+        SetSN74141Chip(4,NumberArray[4]);
+      }
+      if  (timer == digitSwitchTime[5]) {
+  
+        SetSN74141Chip(5,NumberArray[5]);
       }
 
-      if (timer == digitOffTime) {
-        digitOff(i);
+
+         if (timer == digitOffTime[0]) {
+         digitOff(0);
+      }
+           if (timer == digitOffTime[1]) {
+        digitOff(1);
+      }
+           if (timer == digitOffTime[2]) {
+        digitOff(2);
+      }
+           if (timer == digitOffTime[3]) {
+        digitOff(3);
+      }
+           if (timer == digitOffTime[4]) {
+        digitOff(4);
+      }
+           if (timer == digitOffTime[5]) {
+        digitOff(5);
       }
     }
-  }
+ 
 
   // Deal with blink, calculate if we are on or off
   blinkCounter++;
@@ -3013,74 +3293,124 @@ void outputDisplay()
 // by a call to "digitOff"
 //
 // Santosha - edit for 6 K155ID1 - 3 - 74hc595, Shifter lib 
+// optimize for speed ! up to 300000 cycles/1s
+// //next try optimize - 6 digit at one time
 // ************************************************************
 // void digitOn(int digit, int value, byte l0,byte l1,byte l2,byte l3,byte l4,byte l5)
 void digitOn(int digit, int value) {
 
+ OnOff[digit]= 1;         // now digit turns on  ..   по отладке 46 раз в секунду основной цикл - не моргает. (46000 /sec digit)
+ 
   switch (digit) {
    // case 0: PORTC = PORTC | B00001000; break; // PC3 - equivalent to digitalWrite(ledPin_a_1,HIGH);
-   case 0: {
- // nixie (20, l5);  //seconds - lamp 5 -6  - Shifter fast setPin 4 pins connected to decoder K155ID1 74141
- // nixie (16, l4);
- // nixie (12, l3);
- // nixie (8, l2);  //minutes
- // nixie (4, l1);
+   case 0: {   // tens of hours tube
+
+ // nixie (20, value);  //seconds - lamp 5 -6  - Shifter fast setPin 4 pins connected to decoder K155ID1 74141
+ // nixie (8, value);  //minutes
+ // nixie subroutine switch by value
+
   nixie (0, value);  //hours lamp 1-2
-   }
+       }
    // case 1: PORTC = PORTC | B00000100; break; // PC2 - equivalent to digitalWrite(ledPin_a_2,HIGH);
    case 1: {
- // nixie (20, l5);  //seconds - lamp 5 -6 
- // nixie (16, l4);
-//  nixie (12, l3);
-//  nixie (8, l2);  //minutes
+
   nixie (4, value);
-//  nixie (0, l0);  //hours lamp 1-2
+
    }
    // case 2: PORTD = PORTD | B00010000; break; // PD4 - equivalent to digitalWrite(ledPin_a_3,HIGH);
    case 2: {
- // nixie (20, l5);  //seconds - lamp 5 -6 
- // nixie (16, l4);
-//  nixie (12, l3);
-  nixie (8, value);  //minutes
- // nixie (4, l1);
- // nixie (0, l0);  //hours lamp 1-2
+
+   nixie (8, value);  //minutes
+
    }
    
    // case 3: PORTD = PORTD | B00000100; break; // PD2 - equivalent to digitalWrite(ledPin_a_4,HIGH);
     case 3: {
- // nixie (20, l5);  //seconds - lamp 5 -6 
- // nixie (16, l4);
-  nixie (12, value);
- // nixie (8, l2);  //minutes
- // nixie (4, l1);
-//  nixie (0, l0);  //hours lamp 1-2
+
+   nixie (12, value);
+ 
    }
    // case 4: PORTD = PORTD | B00000010; break; // PD1 - equivalent to digitalWrite(ledPin_a_5,HIGH);
    case 4: {
-//  nixie (20, l5);  //seconds - lamp 5 -6 
+
   nixie (16, value);
- // nixie (12, l3);
-//  nixie (8, l2);  //minutes
- // nixie (4, l1);
- // nixie (0, l0);  //hours lamp 1-2
+
    }
    // case 5: PORTD = PORTD | B00000001; break; // PD0 - equivalent to digitalWrite(ledPin_a_6,HIGH);
 
-   case 5: {
+   case 5: {  //tube show ones of seconds
   nixie (20, value);  //seconds - lamp 5 -6 
- // nixie (16, l4);
- // nixie (12, l3);
- // nixie (8, l2);  //minutes
- // nixie (4, l1);
- // nixie (0, l0);  //hours lamp 1-2
+ 
    }
 
   }
 
-    OnOff[digit]= 1;         // now digit turns on  ..   ïî îòëàäêå 46 ðàç â ñåêóíäó îñíîâíîé öèêë - íå ìîðãàåò.
+   
 
+       // turn off (dynamic) 1/50000 s * digitOffTime
+      if (OnOff[0] == 0 ) {          // state for this time - off digits if they turn off now 1/50/1000*6 sec  // выключаются цифры которые снижают яркость или сдвигаются или в эффекте затемнения
+       shifter.setPin(0, HIGH);
+       shifter.setPin(1, HIGH);
+       shifter.setPin(2, HIGH);
+       shifter.setPin(3, HIGH);
+      }
+    if (OnOff[1] == 0 ) {
+       shifter.setPin(4, HIGH);
+       shifter.setPin(5, HIGH);
+       shifter.setPin(6, HIGH);
+       shifter.setPin(7, HIGH);
+    }
+    if (OnOff[2] == 0 ) {
+       shifter.setPin(8, HIGH);
+       shifter.setPin(9, HIGH);
+       shifter.setPin(10, HIGH);
+       shifter.setPin(11, HIGH);
+    }
+    if (OnOff[3] == 0 ) {
+       shifter.setPin(12, HIGH);
+       shifter.setPin(13, HIGH);
+       shifter.setPin(14, HIGH);
+       shifter.setPin(15, HIGH);    
+    }
+    if (OnOff[4] == 0 ) {
+       shifter.setPin(16, HIGH);
+       shifter.setPin(17, HIGH);
+       shifter.setPin(18, HIGH);
+       shifter.setPin(19, HIGH);      
+    }
+    if (OnOff[5] == 0 ) {
+       shifter.setPin(20, HIGH);
+       shifter.setPin(21, HIGH);
+       shifter.setPin(22, HIGH);
+       shifter.setPin(23, HIGH);      
+    }
+ 
+  
+     shifter.write();    // set registers 74HC595
+  //SetSN74141Chip(value); // do here - shifter_write();
+
+  TCNT1 = 0; // Thanks Phil!
+  TCCR1A = tccrOn;
+}
+
+// ************************************************************
+// Finish displaying a digit and turn the HVGen on
+//
+// Santosha - turn off all digits use Shifter - code 0xff - off 74141
+// ************************************************************
+void digitOff(int i) {
+ TCCR1A = tccrOff;
+  //digitalWrite(anodePins[digit], LOW);
+ OnOff[i] = 0;
+  // turn all digits off - equivalent to digitalWrite(ledPin_a_n,LOW); (n=1,2,3,4,5,6) but much faster
+ //shifter.setAll(HIGH);
+   int j=i*4;
+          shifter.setPin(j, HIGH);
+       shifter.setPin(j+1, HIGH);
+       shifter.setPin(j+2, HIGH);
+       shifter.setPin(j+3, HIGH);
        
-      if (OnOff[0] == 0 ) {          // state for this time - off digits if they turn off now  // âûêëþ÷àþòñÿ öèôðû êîòîðûå ñíèæàþò ÿðêîñòü èëè ñäâèãàþòñÿ èëè â ýôôåêòå çàòåìíåíèÿ
+        if (OnOff[0] == 0 ) {          // state for this time - off digits if they turn off now
        shifter.setPin(0, HIGH);
        shifter.setPin(1, HIGH);
        shifter.setPin(2, HIGH);
@@ -3117,67 +3447,6 @@ void digitOn(int digit, int value) {
        shifter.setPin(23, HIGH);      
     }
   
-     shifter.write();    // set registers 74HC595
-  //SetSN74141Chip(value); // do here - shifter_write();
-
-  TCNT1 = 0; // Thanks Phil!
-  TCCR1A = tccrOn;
-}
-
-// ************************************************************
-// Finish displaying a digit and turn the HVGen on
-//
-// Santosha - turn off all digits use Shifter - code 0xff - off 74141
-// ************************************************************
-void digitOff(int i) {
- TCCR1A = tccrOff;
-  //digitalWrite(anodePins[digit], LOW);
- OnOff[i] = 0;
-  // turn all digits off - equivalent to digitalWrite(ledPin_a_n,LOW); (n=1,2,3,4,5,6) but much faster
- //shifter.setAll(HIGH);
-   int j=i*4;
-          shifter.setPin(j, HIGH);
-       shifter.setPin(j+1, HIGH);
-       shifter.setPin(j+2, HIGH);
-       shifter.setPin(j+3, HIGH);
-       
-    /*    if (OnOff[0] == 0 ) {          // state for this time - off digits if they turn off now
-       shifter.setPin(0, HIGH);
-       shifter.setPin(1, HIGH);
-       shifter.setPin(2, HIGH);
-       shifter.setPin(3, HIGH);
-      }
-    if (OnOff[1] == 0 ) {
-       shifter.setPin(4, HIGH);
-       shifter.setPin(5, HIGH);
-       shifter.setPin(6, HIGH);
-       shifter.setPin(7, HIGH);
-    }
-    if (OnOff[2] == 0 ) {
-       shifter.setPin(8, HIGH);
-       shifter.setPin(9, HIGH);
-       shifter.setPin(10, HIGH);
-       shifter.setPin(11, HIGH);
-    }
-    if (OnOff[3] == 0 ) {
-       shifter.setPin(12, HIGH);
-       shifter.setPin(13, HIGH);
-       shifter.setPin(14, HIGH);
-       shifter.setPin(15, HIGH);    
-    }
-    if (OnOff[4] == 0 ) {
-       shifter.setPin(16, HIGH);
-       shifter.setPin(17, HIGH);
-       shifter.setPin(18, HIGH);
-       shifter.setPin(19, HIGH);      
-    }
-    if (OnOff[5] == 0 ) {
-       shifter.setPin(20, HIGH);
-       shifter.setPin(21, HIGH);
-       shifter.setPin(22, HIGH);
-       shifter.setPin(23, HIGH);      
-    }
-  */
  
      shifter.write();    // set registers 74HC595
  /*
@@ -3297,6 +3566,7 @@ void highlightDaysDateFormat() {
 // Display preset, highlight digits 0 and 1
 // ************************************************************
 void highlight0and1() {
+  DIM_VALUE = 3;
   if (displayType[0] != BRIGHT) displayType[0] = BRIGHT;
   if (displayType[1] != BRIGHT) displayType[1] = BRIGHT;
   if (displayType[2] != DIMMED) displayType[2] = DIMMED;
@@ -3309,6 +3579,7 @@ void highlight0and1() {
 // Display preset, highlight digits 2 and 3
 // ************************************************************
 void highlight2and3() {
+    DIM_VALUE = 3;
   if (displayType[0] != DIMMED) displayType[0] = DIMMED;
   if (displayType[1] != DIMMED) displayType[1] = DIMMED;
   if (displayType[2] != BRIGHT) displayType[2] = BRIGHT;
@@ -3321,6 +3592,7 @@ void highlight2and3() {
 // Display preset, highlight digits 4 and 5
 // ************************************************************
 void highlight4and5() {
+    DIM_VALUE = 3;
   if (displayType[0] != DIMMED) displayType[0] = DIMMED;
   if (displayType[1] != DIMMED) displayType[1] = DIMMED;
   if (displayType[2] != DIMMED) displayType[2] = DIMMED;
@@ -3333,6 +3605,7 @@ void highlight4and5() {
 // Display preset
 // ************************************************************
 void allNormal() {
+    DIM_VALUE =   MIN_DIM_DEFAULT;
   if (displayType[0] != NORMAL) displayType[0] = NORMAL;
   if (displayType[1] != NORMAL) displayType[1] = NORMAL;
   if (displayType[2] != NORMAL) displayType[2] = NORMAL;
