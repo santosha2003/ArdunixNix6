@@ -9,6 +9,7 @@ Nixie Clock based on Arduino
 Эффективность преобразователя от 80 до 98 процентов, основной транзистор КП813Б1 - из -за 90 миллиом сопротивления канала. 
 Рабочие режимы от 3 ватт елли слабый свет ночью до 12-18 про прожиге ламп.
 Работает от батареи 4s12p и с адаптером от ноутбука.
+https://santosha.pro/wordpress/wp-content/uploads/2020/10/121334770_2821758654775879_1737424033501923208_o-498x1024.jpg
 
 This is a fork of Ian Sparkes excellent Nixie Clock
 https://github.com/isparkes/ArdunixNix6
