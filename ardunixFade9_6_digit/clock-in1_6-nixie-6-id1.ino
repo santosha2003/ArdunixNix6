@@ -184,7 +184,7 @@ DS3231_T=21.0
 #define BLINK    4
 #define SCROLL   5
 #define BRIGHT   6
-
+#define STATIC   7
 
 // const byte rgb_backlight_curve[] = {0, 16, 32, 48, 64, 80, 99, 112, 128, 144, 160, 176, 192, 208, 224, 240, 255};
 
@@ -1850,7 +1850,7 @@ void doDotBlink()
 
 
 
- // ************************************************************
+// ************************************************************
 // Called once per second
 // ************************************************************
 void performOncePerSecondProcessing() {
@@ -3003,7 +3003,7 @@ void outputDisplay()
           fadeState[i] = fadeSteps;       // set value for  Fade - 46 impr/sec  -> 45 max, 49 --> 47
           digitSwitchTime[i] = (int) fadeState[i] * fadeStep ;    // calc value - 2 when dark 20 when brightly    45*2 = 120 max bright when dark
       // turn on digit slowly
-          //  digitOnTime[i] = ((int) fadeState[i] * fadeStep) -20 ;    // calc value - 2 when dark 20 when brightly    45*2 = 120 max bright when dark  1 * 20 =20 'on timer' - bright,  45*20 =900 slow on
+            digitOnTime[i] = ((int) fadeState[i] * fadeStep)+50  ;    // calc value - 1 when dark 10 when brightly    45*2 .. 3 = 120 max bright when dark  1 * 20 =20 'on timer' - bright,  45*10 =450 slow on
 
       //  }
        }
@@ -3017,15 +3017,17 @@ void outputDisplay()
       } else if (fadeState[i] > 1) {
         // Continue the fade
         fadeState[i] = fadeState[i] - 1;
-        digitSwitchTime[i] = (int) fadeState[i] * fadeStep;
+        digitSwitchTime[i] = (int) fadeState[i] * fadeStep ;
+         digitOnTime[i] = ((int) fadeState[i] * fadeStep)+50  ; // 450 'on time' (900 off) dark -> 3 brightly
       //  digitOnTime[i]=digitOnTime[i] - fadeStep;
        // if (digitOnTime[i] <0) digitOnTime[i]=0;
       }
     } else {
-       // finish the fade
+       // finish the fade - when time change - start fade - NumberArray will be next digit, currNumber - previous
       digitSwitchTime[i] = DIGIT_DISPLAY_COUNT;
     currNumberArray[i] = NumberArray[i];   // fadeState[i] =0 bulb is Fade but Fade not start, copy current digit to currNumberArray[i], wait for change time
       digitOnTime[i] = 0 ;
+      // digitOnTime[i] = ((int) fadeState[i] * fadeStep)/2  ; 0*3  =0
     }
    //}
 /*        
@@ -3041,52 +3043,52 @@ void outputDisplay()
     for (int timer = 0 ; timer < dispCount ; timer++) {
       if (timer == digitOnTime[0]) {    //fade or transition - turn on together 2 digit
       //  digitOn(i, currNumberArray[i],l0,l1,l2,l3,l4,l5);   // i=0 .. i=5 lamp ten of hour ... ones of seconds, currNumberArray[i] - digit to display at [i] position 
-       digitOn(0, NumberArray[0]);
+       digitOn(0, currNumberArray[0]);
       }
       if (timer == digitOnTime[1]) {
  
-       digitOn(1, NumberArray[1]);
+       digitOn(1, currNumberArray[1]);
       }
             if (timer == digitOnTime[2]) {
    
-       digitOn(2, NumberArray[2]);
+       digitOn(2, currNumberArray[2]);
       }
             if (timer == digitOnTime[3]) {
   
-       digitOn(3, NumberArray[3]);
+       digitOn(3, currNumberArray[3]);
       }
             if (timer == digitOnTime[4]) {
 
-       digitOn(4, NumberArray[4]);
+       digitOn(4, currNumberArray[4]);
       }
             if (timer == digitOnTime[5]) {
   
-       digitOn(5, NumberArray[5]);
+       digitOn(5, currNumberArray[5]);
       }
 
       if  (timer == digitSwitchTime[0]) {     //fade or transition - turn on together 2 digit
        // SetSN74141Chip(i,NumberArray[i],l0,l1,l2,l3,l4,l5); 
-        SetSN74141Chip(0,currNumberArray[0]);
+        SetSN74141Chip(0,NumberArray[0]);
       }
             if  (timer == digitSwitchTime[1]) {
 
-        SetSN74141Chip(1,currNumberArray[1]);
+        SetSN74141Chip(1,NumberArray[1]);
       }
       if  (timer == digitSwitchTime[2]) {
   
-        SetSN74141Chip(2,currNumberArray[2]);
+        SetSN74141Chip(2,NumberArray[2]);
       }
       if  (timer == digitSwitchTime[3]) {
  
-        SetSN74141Chip(3,currNumberArray[3]);
+        SetSN74141Chip(3,NumberArray[3]);
       }
       if  (timer == digitSwitchTime[4]) {
  
-        SetSN74141Chip(4,currNumberArray[4]);
+        SetSN74141Chip(4,NumberArray[4]);
       }
       if  (timer == digitSwitchTime[5]) {
   
-        SetSN74141Chip(5,currNumberArray[5]);
+        SetSN74141Chip(5,NumberArray[5]);
       }
 
 
@@ -3960,3 +3962,4 @@ void setNewNextMode(int newNextMode) {
   nextMode = newNextMode;
   currentMode = newNextMode - 1;
 }
+
